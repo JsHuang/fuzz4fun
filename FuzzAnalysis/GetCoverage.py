@@ -3,13 +3,12 @@
 """
 Get Coverage Info
 """
-
+import time
 import subprocess
 import sys
 import os
 import shutil
-
-
+import platform
 
 def dbgPrint(s):
     Debug = True
@@ -17,15 +16,26 @@ def dbgPrint(s):
         print(s)
 
 def exec_target(prog, testcase):
+    
+    sys = platform.system()
+    if sys == "Windows":
+        cmd = "C:\\DynamoRIO-Windows\\bin32\\drrun.exe -t drcov -- %s %s" % (prog, testcase)
+        dbgPrint(cmd)
+        if os.path.exists("coverage"):
+            os.chdir("coverage")
 
-    cmd = "C:\\DynamoRIO-Windows\\bin32\\drrun.exe -t drcov -- %s %s" % (prog, testcase)
-    dbgPrint(cmd)
-    if os.path.exists("coverage"):
-        os.chdir("coverage")
-    # subprocess.Popen(cmd.split(), stdout=open('/dev/null', "w"))    # for linux
-    subprocess.Popen(cmd.split(), stdout=open('NUL', "w"))
+        p = subprocess.Popen(cmd.split(), stdout=open('NUL', "w"))
+        p.wait()
     
-    
+    elif sys == "Linux":
+        cmd = "/src/pin/pin -t /out/CodeCoverage.so -w libextractor_wav.so -- %s %s" % (prog, testcase)
+        dbgPrint(cmd)
+        if os.path.exists("coverage"):
+            os.chdir("coverage")
+        p = subprocess.Popen(cmd.split(), stdout=open('/dev/null', "w"))    # for linux
+        p.wait()
+        # pintool need to rename result
+        os.rename("./trace.log", "%s.log" % os.path.basename(testcase))
 if __name__ == "__main__":
     
     if len(sys.argv) < 2:
@@ -60,6 +70,7 @@ if __name__ == "__main__":
         dbgPrint(file_abs_path)
         if os.path.isfile(file_abs_path):
             exec_target(prog_abs_path, file_abs_path)
+
             # break
         
     
