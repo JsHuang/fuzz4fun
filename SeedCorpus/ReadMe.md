@@ -1,4 +1,13 @@
 # Some fuzzing corpus
+## find_samples.py
+### about
+find files with specific extention and magic  
+
+### usage
+find_samples.py extension magic_header folder isBinary urlCount
+
+### quote
+https://github.com/joxeankoret/nightmare/blob/master/runtime/find_samples.py  
 
 ## list of file signature
 https://en.wikipedia.org/wiki/List_of_file_signatures
@@ -1643,12 +1652,4 @@ AVI.</pre>
 <td><a href="/wiki/Zstandard" title="Zstandard">Zstandard</a> compressed file<sup id="cite_ref-49" class="reference"><a href="#cite_note-49">&#91;49&#93;</a></sup><sup id="cite_ref-50" class="reference"><a href="#cite_note-50">&#91;50&#93;</a></sup>
 </td></tr></tbody></table>
 
-## find_samples.py
-### about
-find files with specific extention and magic  
 
-### usage
-find_samples.py extension magic_header folder isBinary urlCount
-
-### quote
-https://github.com/joxeankoret/nightmare/blob/master/runtime/find_samples.py
