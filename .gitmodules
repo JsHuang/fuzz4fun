@@ -1,0 +1,3 @@
+[submodule "go-fuzz-corpus"]
+	path = go-fuzz-corpus
+	url = https://github.com/dvyukov/go-fuzz-corpus.git
