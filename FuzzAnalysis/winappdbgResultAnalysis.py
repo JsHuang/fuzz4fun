@@ -26,7 +26,7 @@ def calculate_stack_hash(file_path):
      
 def analyse():
     
-    result_dir = "D:\\100-Work\\100-Work\\DEC\\Ovation\\DiagFuzz\\graphics"
+    result_dir = "D:"
     for result_file in os.listdir(result_dir):
         file_path = os.path.join(result_dir, result_file)
         if os.path.isfile(file_path):
