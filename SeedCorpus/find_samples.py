@@ -1,5 +1,5 @@
 #!/usr/bin/python
-
+#coding=utf-8
 """
 Nightmare Fuzzing Project samples finder
 @author: joxean
@@ -15,11 +15,12 @@ import sys
 import time
 import socket
 import urllib2
+import pdb
 
 from hashlib import sha1
 from urllib import unquote
 
-from BeautifulSoup import BeautifulSoup
+from bs4 import BeautifulSoup
 
 #-----------------------------------------------------------------------
 MAX_SIZE = 1024 * 1024
@@ -43,7 +44,13 @@ class CSamplesFinder:
 
     socket.setdefaulttimeout(30)
     url = "https://www.google.com/search?q=filetype:%s+%s+-facebook.com&num=%s" % (ext, search,count)
-    opener = urllib2.build_opener()
+
+    proxies = {
+    'https': 'https://127.0.0.1:1083',
+    'http': 'http://127.0.0.1:1083'
+    }
+    proxy = urllib2.ProxyHandler(proxies)
+    opener = urllib2.build_opener(proxy)
     opener.addheaders = [('User-agent', 'Mozilla/5.0')]
     r = opener.open(url)
     buf = r.read()
@@ -58,7 +65,14 @@ class CSamplesFinder:
           href = unquote(href[7:pos])
           # ToDo:
           # 这里了需要根据href判断是否为github gitlab等网站，如果是，需要替换url
-          log("Downloading %s..." % href)
+          if "git" in href:
+            if "/src/" in href:
+              href = href.replace("/src/", "/raw/")
+            elif "/blob/" in href:
+              href = href.replace("/blob/", "/raw/")
+          
+          log("Downloading %s" % href)
+          # continue
           curCount = curCount + 1
           try:
             file_data = str(opener.open(href).read(MAX_SIZE+1))
