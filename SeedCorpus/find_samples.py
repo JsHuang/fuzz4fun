@@ -41,6 +41,7 @@ class CSamplesFinder:
     isBinary = int(isBinary)
     count = str(count)
     curCount = 0
+    saveCount = 0
 
     socket.setdefaulttimeout(30)
     url = "https://www.google.com/search?q=filetype:%s+%s+-facebook.com&num=%s" % (ext, search,count)
@@ -55,6 +56,7 @@ class CSamplesFinder:
     r = opener.open(url)
     buf = r.read()
     soup = BeautifulSoup(buf)
+    pdb.set_trace()
     for a in soup.findAll("a", href=True):
       href = a["href"]
       if href.find("webcache.googleusercontent.com") > -1:
@@ -65,11 +67,11 @@ class CSamplesFinder:
           href = unquote(href[7:pos])
           # ToDo:
           # 这里了需要根据href判断是否为github gitlab等网站，如果是，需要替换url
-          if "git" in href:
-            if "/src/" in href:
-              href = href.replace("/src/", "/raw/")
-            elif "/blob/" in href:
-              href = href.replace("/blob/", "/raw/")
+          
+          if "/src/" in href:
+            href = href.replace("/src/", "/raw/")
+          elif "/blob/" in href:
+            href = href.replace("/blob/", "/raw/")
           
           log("Downloading %s" % href)
           # continue
@@ -100,6 +102,7 @@ class CSamplesFinder:
             f = open(os.path.join(folder, file_hash) + "." + ext, "wb")
             f.write(file_data)
             f.close()
+            saveCount = saveCount + 1
             log("File %s saved" % file_hash)
           except KeyboardInterrupt:
             log("Aborted")
@@ -107,6 +110,7 @@ class CSamplesFinder:
           except:
             log("Error: %s" % str(sys.exc_info()[1]))
     print "Total Files Processed:",curCount
+    print "Total Files Saved:",saveCount
 #-----------------------------------------------------------------------
 def main(ext, magic, directory,isBinary,count):
   finder = CSamplesFinder()

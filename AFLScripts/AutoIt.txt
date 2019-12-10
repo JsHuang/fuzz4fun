@@ -1,0 +1,74 @@
+#cs ----------------------------------------------------------------------------
+
+ AutoIt Version: 3.3.14.5
+ Author:         1vanChen
+ Name:           fuzzHelper
+
+ Script Function:
+	Get target program window class
+	Open target program and close it automatically
+ Usage:
+    Find target program window class (make sure the program is running): 	fuzzHelper.exe programName.exe
+	Open target program and close it automatically:							fuzzHelper.exe ProgramName.exe WindowClsName
+
+#ce ----------------------------------------------------------------------------
+
+#include <Constants.au3>
+#include <MsgBoxConstants.au3>
+#include <WindowsConstants.au3>
+#include <WinAPI.au3>
+
+#pragma compile(Console, True)
+
+If $CmdLine[0]==2 Then
+   While True
+	  Local $hWnd = _WinGetHandleByPnmAndCls($CmdLine[1],$CmdLine[2])
+	  If WinActive($hWnd) Then
+		 Sleep(500)
+		 ;此处只是发送"关闭"这个快捷键，
+		 ;还可以根据需要添加其他要发送的快捷键
+		 Send("{ESC}")
+		 WinClose($hWnd)
+	  EndIf
+   WEnd
+ElseIf $CmdLine[0]==1 Then
+   Local $pid = ProcessExists($CmdLine[1])
+   If $pid Then
+       _WinGetWindowClsByPid($pid)
+   Else
+      MsgBox($MB_SYSTEMMODAL, "", "程序未找到")
+   EndIf
+
+EndIf
+
+; 根据pid打印该程序所有窗口类
+Func _WinGetWindowClsByPid ($pid )
+   Local $winArr = _WinAPI_EnumWindowsTop()
+   For $i=1 To $winArr[0][0]
+	  If $pid=WinGetProcess($winArr[$i][0])Then
+		 ConsoleWrite($winArr[$i][1] & @CRLF)
+	  EndIf
+   Next
+
+EndFunc
+
+; 根据pname和class获取窗口句柄，找不到则返回0
+Func _WinGetHandleByPnmAndCls($pname, $class)
+   Local $pid = ProcessExists($pname)
+   If $pid Then
+      return _WinGetHandleByPidAndCls($pid, $class)
+   Else
+      Return 0
+   EndIf
+EndFunc
+
+; 根据pid和class获取窗口句柄，找不到则返回0
+Func _WinGetHandleByPidAndCls($pid, $class)
+   Local $winArr = _WinAPI_EnumWindowsTop()
+   For $i=1 To $winArr[0][0]
+      If $pid=WinGetProcess($winArr[$i][0]) And $winArr[$i][1]=$class Then
+         return $winArr[$i][0]
+      EndIf
+   Next
+   Return 0
+EndFunc
