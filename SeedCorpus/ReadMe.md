@@ -9,6 +9,9 @@ find_samples.py extension magic_header folder isBinary urlCount
 ### quote
 https://github.com/joxeankoret/nightmare/blob/master/runtime/find_samples.py  
 
+## raw file samples
+https://www.rawsamples.ch/index.php/en/
+
 ## list of file signature
 https://en.wikipedia.org/wiki/List_of_file_signatures
 
