@@ -44,7 +44,7 @@ HEADERS = {'Authorization': 'token '}
 MAX_SIZE = 1024*1024
 g_per_pape = 50
 
-
+g_SUBQUERIES = []
 g_crawled_file_list = []
 #To save the number of files processed
 
@@ -54,6 +54,23 @@ g_countOfFiles = 0
 # Functions #
 #############
 
+
+def generate_sub_queries(min_size, max_size, size_intervel):
+    global g_SUBQUERIES
+    
+    query_count = (max_size-min_size)/size_intervel
+    
+    for i in range(0, query_count):
+        sub_query = "+size:%d..%d" %(min_size+i*size_intervel, min_size+(i+1)*size_intervel)
+        g_SUBQUERIES.append(sub_query)
+    
+    sub_query = "+size:%d..%d" %(min_size+query_count*size_intervel, max_size)
+    g_SUBQUERIES.append(sub_query)
+    print g_SUBQUERIES
+
+generate_sub_queries(10,1000,50)
+
+sys.exit(0)
 
 def getUrl(url):
     socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 7890)
@@ -131,6 +148,7 @@ def crawl_github(extension, magic, store_folder):
 
         dataRead = simplejson.loads(getUrl(base_url))
         retry_times = 0
+        ## ToDo: Sleep longer with retry times increase
         while dataRead.get('total_count') == None and retry_times < 10:
             dataRead = simplejson.loads(getUrl(base_url))
             time.sleep(10)
@@ -152,9 +170,10 @@ def crawl_github(extension, magic, store_folder):
             retry_times = 0
             while dataRead.get('total_count') == None and retry_times<10:
                 dataRead = simplejson.loads(getUrl(page_url))
-                time.sleep(0.1)
+                time.sleep(10)
                 retry_times = retry_times + 1
-                print "... ",		
+                print "... ",
+            		
             print "Current page total count %d" %  dataRead.get('total_count') 
             #Iteration over all the repositories in the current json content page
             for item in dataRead['items']:
