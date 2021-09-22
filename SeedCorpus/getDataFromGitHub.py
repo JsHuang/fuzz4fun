@@ -42,6 +42,8 @@ OUTPUT_FOLDER = "E:\\testcase\\jt" #Folder where ZIP files will be stored
 
 HEADERS = {'Authorization': 'token '} 
 MAX_SIZE = 1024*1024
+MIN_SIZE = 100
+
 g_per_pape = 50
 
 g_SUBQUERIES = []
@@ -66,11 +68,11 @@ def generate_sub_queries(min_size, max_size, size_intervel):
     
     sub_query = "+size:%d..%d" %(min_size+query_count*size_intervel, max_size)
     g_SUBQUERIES.append(sub_query)
-    print g_SUBQUERIES
+   #print g_SUBQUERIES
 
-generate_sub_queries(10,1000,50)
+#generate_sub_queries(10,1000,50)
 
-sys.exit(0)
+#sys.exit(0)
 
 def getUrl(url):
     socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 7890)
@@ -133,17 +135,17 @@ def save_his(ext):
            
 def crawl_github(extension, magic, store_folder):
     
-    global g_countOfFiles, g_crawled_file_list,g_per_pape
+    global g_countOfFiles, g_crawled_file_list,g_per_pape, g_SUBQUERIES
     initialize_token()
     initialize_his(extension)
     retry_times = 0
-    for subquery in range(1, len(SUBQUERIES)+1):
+    for subquery in range(1, len(g_SUBQUERIES)+1):
 
-        print "Processing subquery " + str(subquery) + " of " + str(len(SUBQUERIES)) + " ..."
+        print "Processing subquery " + str(subquery) + " of " + str(len(g_SUBQUERIES)) + " ..."
 
         #Obtain the number of pages for the current subquery (by default each page contains 100 items)
         
-        base_url = URL + "extension:" + extension + str(SUBQUERIES[subquery-1]) + PARAMETERS + str(g_per_pape)
+        base_url = URL + "extension:" + extension + str(g_SUBQUERIES[subquery-1]) + PARAMETERS + str(g_per_pape)
         print base_url
 
         dataRead = simplejson.loads(getUrl(base_url))
@@ -151,7 +153,7 @@ def crawl_github(extension, magic, store_folder):
         ## ToDo: Sleep longer with retry times increase
         while dataRead.get('total_count') == None and retry_times < 10:
             dataRead = simplejson.loads(getUrl(base_url))
-            time.sleep(10)
+            time.sleep(retry_times*2)
             retry_times = retry_times + 1
             print "... ",
         numberOfPages = int(math.ceil(dataRead.get('total_count')/float(g_per_pape)))
@@ -170,7 +172,7 @@ def crawl_github(extension, magic, store_folder):
             retry_times = 0
             while dataRead.get('total_count') == None and retry_times<10:
                 dataRead = simplejson.loads(getUrl(page_url))
-                time.sleep(10)
+                time.sleep(retry_times*2)
                 retry_times = retry_times + 1
                 print "... ",
             		
@@ -190,12 +192,17 @@ def crawl_github(extension, magic, store_folder):
                 html_url = item['html_url']
                 download_url = html_url.replace("/blob/", "/raw/")
                 #Download the file 				
-                print("Query : %d/%d Page : %d/%d Total %d Download url: \n%s" % (subquery,len(SUBQUERIES), currentPage,numberOfPages, g_countOfFiles,download_url))
+                print("Query : %d/%d Page : %d/%d Total %d Download url: \n%s" % (subquery,len(g_SUBQUERIES), currentPage,numberOfPages, g_countOfFiles,download_url))
 
                 try:
                     file_data = getUrl(download_url).encode('utf-8')
-                    if magic!= "None" and not file_data.startswith(magic):
+                    if len(file_data) > MAX_SIZE:
+                        print("File too big")
+                        g_crawled_file_list.append(sha)     # 太大的文件后续不再爬取
+                        continue
+                    if magic!= "None" and not file_data.startswith(magic.decode('hex')):
                         print("Not  file wanted")
+                        g_crawled_file_list.append(sha)     # Magic不匹配的文件后续不再爬取
                         continue
                     f = open(os.path.join(store_folder, sha) + "." + extension, "wb")
                     f.write(file_data)
@@ -207,13 +214,13 @@ def crawl_github(extension, magic, store_folder):
                 except:
                     print("Error: %s" % str(sys.exc_info()[1]))
 
-                #time.sleep(0.1)
+                time.sleep(0.1)
             #A delay between different page queries
             save_cur_his(extension)
             time.sleep(2)
             print str(g_countOfFiles) + " files have been processed now."
         #A delay between different subqueries
-        if (subquery < len(SUBQUERIES)):
+        if (subquery < len(g_SUBQUERIES)):
             print "Sleeping " + str(DELAY_BETWEEN_QUERYS) + " seconds before the new query ..."
 
             time.sleep(DELAY_BETWEEN_QUERYS)    
@@ -221,12 +228,14 @@ def crawl_github(extension, magic, store_folder):
 
 def usage():
     print "Usage:", sys.argv[0], "extension magic_header folder per_page"
+    print "Note:\n using hex format magic header \neg: ABC==>414243"
 
 if __name__ == "__main__":
     
     if len(sys.argv) != 5:
         usage()
     else:
+        generate_sub_queries(MIN_SIZE, MAX_SIZE, 5000)
         try:
             crawl_github(sys.argv[1], sys.argv[2], sys.argv[3])
             g_per_pape = int(sys.argv[4])
