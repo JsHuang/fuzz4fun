@@ -96,27 +96,17 @@ if __name__ == "__main__":
         store_folder = sys.argv[2]
         initialize_url_list(ext)
     
-    executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
-    try:
-        futures = [executor.submit(download_file, k,v,ext,store_folder) for (k,v) in g_download_url_list.items()]
-        for future in concurrent.futures.as_completed(futures):
-            if future.result()[0]:
-                g_total_download = g_total_download+1
-                print("%d:" % g_total_download, end='')
-            print(future.result()[1])
-                
-    except KeyboardInterrupt:
-        print("Manually stoped")
-        executor.shutdown(wait=False)
-        
-        # for future in concurrent.futures.as_completed(future_to_url):
-        #     try:
-        #         data = future.result()
-        #     except Exception as exc:
-        #         print('%r download failed: %s' % (future_to_url[1], exc))
-        #     else:
-        #         print('%r download  success' % (future_to_url[1]))    
-        
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor
+        try:
+            futures = [executor.submit(download_file, k,v,ext,store_folder) for (k,v) in g_download_url_list.items()]
+            for future in concurrent.futures.as_completed(futures):
+                if future.result()[0]:
+                    g_total_download = g_total_download+1
+                    print("%d:" % g_total_download, end='')
+                print(future.result()[1])
+                    
+        except KeyboardInterrupt:
+            print("Manually stoped")
         
         
 print ("DONE! %d file has been downloaded" % g_total_download)
