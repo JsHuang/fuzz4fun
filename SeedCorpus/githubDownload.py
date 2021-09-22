@@ -96,7 +96,7 @@ if __name__ == "__main__":
         store_folder = sys.argv[2]
         initialize_url_list(ext)
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         try:
             futures = [executor.submit(download_file, k,v,ext,store_folder) for (k,v) in g_download_url_list.items()]
             for future in concurrent.futures.as_completed(futures):
