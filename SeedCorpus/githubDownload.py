@@ -24,10 +24,8 @@ import requests
 import sys
 import pickle
 import traceback
-# import therading
 import concurrent.futures
-import socks
-import socket
+
 #############
 # Constants #
 #############
@@ -38,27 +36,34 @@ MAX_SIZE = 1024*1024
 g_max_download = 10
 g_total_download = 0
 g_download_url_list = {}
+g_proxy = {
+    'http': 'socks5://127.0.0.1:7890',
+    'https': 'socks5://127.0.0.1:7890', 
+}
 #############
 # Functions #
 #############
 
+
 def download_file(sha,url,extension,store_dir):
-    global g_total_download
+    global g_total_download, g_proxy
     
     file_name = "%s.%s" %(sha,extension)
-    socks.set_default_proxy(socks.SOCKS5, "127.0.0.1", 7890)
-    socket.socket = socks.socksocket
+    
+    if os.path.exists(os.path.join(store_dir, file_name)):
+        return (1, ("%s has exitsted\n"%sha))
     
     try:
-        with requests.get(url, stream=True) as r:
+        with requests.get(url, stream=True, proxies = g_proxy) as r:
             with open(os.path.join(store_dir, file_name), 'wb') as f:
                 for data in r.iter_content(1024):
                     f.write(data)
-                    print("%s has downloaded"%url)
-                    g_total_download = g_total_download + 1
+                    return (1, "%s has been downloaded\n" % sha )
+    except KeyboardInterrupt:
+        return (0, "%s download failed\n %s" % (url,traceback.print_exc()) )
     except :
-        print("%s download failed" % url)
-        traceback.print_exc()
+        return (0, "%s download failed\n %s" % (url,traceback.print_exc()) )
+        
 
 def initialize_url_list(ext):
     global g_download_url_list
@@ -71,7 +76,7 @@ def initialize_url_list(ext):
     with open(down_file, "rb") as f:
         g_download_url_list = pickle.load(f)
         f.close()
-    print(g_download_url_list)
+    #print(g_download_url_list)
     print ("%d download url found!" % len(g_download_url_list))
 
 
@@ -87,17 +92,31 @@ if __name__ == "__main__":
         usage()
         sys.exit(0)
     else:
-        
         ext = sys.argv[1]
         store_folder = sys.argv[2]
         initialize_url_list(ext)
     
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        future_to_url = {}
-
-        for k,v in g_download_url_list.items():
-            executor.submit(download_file, k,v,ext,store_folder)
-
+    executor = concurrent.futures.ThreadPoolExecutor(max_workers=5)
+    try:
+        futures = [executor.submit(download_file, k,v,ext,store_folder) for (k,v) in g_download_url_list.items()]
+        for future in concurrent.futures.as_completed(futures):
+            if future.result()[0]:
+                g_total_download = g_total_download+1
+                print("%d:" % g_total_download, end='')
+            print(future.result()[1])
+                
+    except KeyboardInterrupt:
+        print("Manually stoped")
+        executor.shutdown(wait=False)
+        
+        # for future in concurrent.futures.as_completed(future_to_url):
+        #     try:
+        #         data = future.result()
+        #     except Exception as exc:
+        #         print('%r download failed: %s' % (future_to_url[1], exc))
+        #     else:
+        #         print('%r download  success' % (future_to_url[1]))    
+        
         
         
 print ("DONE! %d file has been downloaded" % g_total_download)
