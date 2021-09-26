@@ -49,6 +49,7 @@ def download_file(sha,url,extension,store_dir,magic):
             if magic != None:
                 magic_flag = 1
             store_name = os.path.join(store_dir, file_name)
+            file_size = 0
             with open(store_name, 'wb') as f:
                 for data in r.iter_content(1024):
                     if magic_flag and not data.startswith( codecs.decode(magic,'hex_codec')):
@@ -57,9 +58,11 @@ def download_file(sha,url,extension,store_dir,magic):
                         return (0,"Magic is not right:\nDownload file magic is %s\n%s\n" % (data[:10],url))
                     else:
                         magic_flag = 0
-                        
+                    file_size += len(data)    
                     f.write(data)
                 f.close()
+                if file_size > MAX_SIZE:
+                    os.remove(store_name)
                 return (1, "%s has been downloaded\n" % sha )
                 
     except KeyboardInterrupt:
