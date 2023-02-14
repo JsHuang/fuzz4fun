@@ -26,8 +26,8 @@ g_max_download = 10
 g_total_download = 0
 g_download_url_list = {}
 g_proxy = {
-    'http': 'socks5://127.0.0.1:7890',
-    'https': 'socks5://127.0.0.1:7890', 
+    'http': 'http://127.0.0.1:10809',
+    'https': 'http://127.0.0.1:10809', 
 }
 #############
 # Functions #
@@ -43,12 +43,13 @@ def download_file(sha,url,extension,store_dir,magic):
     if os.path.exists(os.path.join(store_dir, file_name)):
         return (1, ("%s exitsted\n"%sha))
     
+    store_name = os.path.join(store_dir, file_name)
     try:
-        #with requests.get(url, stream=True, proxies = g_proxy) as r:
-        with requests.get(url, stream=True) as r:
+        with requests.get(url, stream=True, proxies = g_proxy) as r:
+        #with requests.get(url, stream=True) as r:
             if magic != None:
                 magic_flag = 1
-            store_name = os.path.join(store_dir, file_name)
+            
             file_size = 0
             with open(store_name, 'wb') as f:
                 for data in r.iter_content(1024):
@@ -66,11 +67,11 @@ def download_file(sha,url,extension,store_dir,magic):
                 return (1, "%s has been downloaded\n" % sha )
                 
     except KeyboardInterrupt:
-        f.close()
+        #f.close()
         os.remove(store_name)
         return (0, "%s download failed\n %s" % (url,traceback.print_exc()) )
     except :
-        f.close()
+        #f.close()
         os.remove(store_name)
         return (0, "%s download failed\n %s" % (url,traceback.print_exc()) )
         
