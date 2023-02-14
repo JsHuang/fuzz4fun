@@ -1,4 +1,10 @@
 # Some fuzzing corpus
+
+## Online corpus
+
+cgm test suite: **https://www.itl.nist.gov/div897/ctg/cgm_form.htm**
+
+# Tools
 ## find_samples.py
 ### about
 find files with specific extention and magic  
@@ -11,6 +17,9 @@ https://github.com/joxeankoret/nightmare/blob/master/runtime/find_samples.py
 
 ## raw file samples
 https://www.rawsamples.ch/index.php/en/
+
+
+
 
 ## list of file signature
 https://en.wikipedia.org/wiki/List_of_file_signatures
