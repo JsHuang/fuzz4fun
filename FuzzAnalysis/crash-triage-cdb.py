@@ -38,7 +38,8 @@ def run_command(prog, crash_file_path):
 
     except subprocess.TimeoutExpired:
         print("Timeout expired, sending Ctrl+C to terminate the process.")
-        subp.send_signal(signal.SIGINT)
+        # subp.send_signal(subprocess.signal.CTRL_C_EVENT)
+        subp.kill()
 
         return "No crash"
 
